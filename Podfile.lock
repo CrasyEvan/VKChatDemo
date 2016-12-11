@@ -1,0 +1,18 @@
+PODS:
+  - EaseMobSDKFull (2.2.8)
+  - Masonry (1.0.2)
+  - MJExtension (3.0.13)
+
+DEPENDENCIES:
+  - EaseMobSDKFull
+  - Masonry (~> 1.0.2)
+  - MJExtension (~> 3.0.13)
+
+SPEC CHECKSUMS:
+  EaseMobSDKFull: ea9d2890fe73d18a99c9133a1ee83cdfce65e96e
+  Masonry: 7c429b56da9d4ee0bbb3ed77a5ea710d6a5df39e
+  MJExtension: 5932755f451458eefa24239358817f8d291240c7
+
+PODFILE CHECKSUM: 928bae756ff2dc9a8e2441278d1e42a8ba7f3a53
+
+COCOAPODS: 1.0.1
