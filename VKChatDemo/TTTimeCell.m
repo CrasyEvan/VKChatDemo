@@ -21,6 +21,7 @@
 - (UILabel *)timeLabel {
     
     if(!_timeLabel) {
+
         _timeLabel = [[UILabel alloc] initWithFrame:CGRectZero];
         _timeLabel.layer.cornerRadius = 8.0f;
         _timeLabel.textColor = [UIColor grayColor];

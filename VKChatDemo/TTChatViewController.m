@@ -23,7 +23,7 @@
 #define kScreen_Height [UIScreen mainScreen].bounds.size.height
 
 
-@interface TTChatViewController ()<EMChatManagerDelegate, UITableViewDataSource, UITableViewDelegate>
+@interface TTChatViewController ()<EMChatManagerDelegate, UITableViewDataSource, UITableViewDelegate, UITextViewDelegate>
 
 
 /** 数据源 */
@@ -38,6 +38,7 @@
 @property (nonatomic, strong) EMConversation *conversation;
 @property (nonatomic, strong) TTInputToolBarView *inputBarView;
 @property (nonatomic, strong) EMBuddy *buddy;
+@property (nonatomic, assign) CGRect keyboardFrame;
 
 @end
 
@@ -60,8 +61,10 @@
     [[EaseMob sharedInstance].chatManager addDelegate:self delegateQueue:nil];
     self.view.backgroundColor = [UIColor whiteColor];
     [self scrollToBottom];
+}
 
-    
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyBoardWillShow:) name:UIKeyboardWillShowNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyBoardWillHide:) name:UIKeyboardWillHideNotification object:nil];
 }
@@ -91,6 +94,8 @@
     self.inputBarView = [[TTInputToolBarView alloc] initWithFrame:CGRectMake(0, self.tableView.frame.origin.y + self.tableView.frame.size.height, kScreen_Width, 46)];
     [self.inputBarView.senderButton addTarget:self action:@selector(senderButtonPressed) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:_inputBarView];
+    self.inputBarView.textView.delegate = self;
+
 }
 
 #pragma mark -发送消息
@@ -117,7 +122,8 @@
     msgObj.messageType = eMessageTypeChat;
     
     //2.发送消息
-    [[EaseMob sharedInstance].chatManager asyncSendMessage:msgObj progress:nil prepare:^(EMMessage *message, EMError *error) {
+    [[EaseMob sharedInstance].chatManager asyncSendMessage:msgObj progress:nil
+                                                   prepare:^(EMMessage *message, EMError *error) {
         NSLog(@"准备发送文字");
     } onQueue:nil completion:^(EMMessage *message, EMError *error) {
         NSLog(@"文字发送成功%@",error);
@@ -200,7 +206,8 @@
     // 假设在数组的第一位置添加时间
     //[self.dataSources addObject:@"16:06"];
     NSLog(@"userID:%@", self.userID);
-    EMConversation *conversation = [[EaseMob sharedInstance].chatManager conversationForChatter:self.userID conversationType:eConversationTypeChat];
+    EMConversation *conversation = [[EaseMob sharedInstance].chatManager
+                                    conversationForChatter:self.userID conversationType:eConversationTypeChat];
     self.conversation = conversation;
     NSArray *messages = [conversation loadAllMessages];
     for (EMMessage *msgObj in messages) {
@@ -244,18 +251,18 @@
     
     CGRect kbEndFrm = [noti.userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue];
     CGFloat kbHeight = kbEndFrm.size.height;
-    
-    CGRect rect = self.inputBarView.frame;
-    rect.origin.y -= kbHeight;
-    self.inputBarView.frame = rect;
-    
-    CGRect tableViewF = self.tableView.frame;
-    tableViewF.origin.y -= kbHeight;
-    self.tableView.frame = tableViewF;
-    
-    [UIView animateWithDuration:0.4 animations:^{
-        [self.view layoutIfNeeded];
-    }];
+    self.keyboardFrame = kbEndFrm;
+//    CGRect rect = self.inputBarView.frame;
+//    rect.origin.y -= kbHeight;
+//    self.inputBarView.frame = rect;
+//    
+//    CGRect tableViewF = self.tableView.frame;
+//    tableViewF.origin.y -= kbHeight;
+//    self.tableView.frame = tableViewF;
+//    
+//    [UIView animateWithDuration:0.4 animations:^{
+//        [self.view layoutIfNeeded];
+//    }];
     
 }
 #pragma mark 键盘退出时会触发的方法
@@ -265,18 +272,19 @@
     tableViewF.origin.y = 0;
     self.tableView.frame = tableViewF;
     
-    CGRect rect = self.inputBarView.frame;
-    rect.origin.y = self.tableView.frame.origin.y + self.tableView.frame.size.height;
-    self.inputBarView.frame = rect;
     [UIView animateWithDuration:0.4 animations:^{
-        [self.view layoutIfNeeded];
+        CGRect rect = self.inputBarView.frame;
+        rect.origin.y = self.tableView.frame.origin.y + self.tableView.frame.size.height;
+        self.inputBarView.frame = rect;
+    } completion:^(BOOL finished) {
+        
     }];
 }
 
 
 #pragma mark - SrollView Delegate
-- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
-    [self.inputBarView.textView endEditing:YES];
+- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
+    [self.inputBarView.textView resignFirstResponder];
 }
 
 -(void)scrollToBottom{
@@ -293,11 +301,25 @@
 
 }
 
-
-
 - (void)releaseKeyBoard {
     [self.inputBarView.textView endEditing:YES];
 }
+
+#pragma mark - UITextfield Delegate
+- (void)textViewDidBeginEditing:(UITextView *)textView {
+    [UIView animateWithDuration:0.4 animations:^{
+        CGRect tableViewF = self.tableView.frame;
+        tableViewF.origin.y -= _keyboardFrame.size.height;
+        self.tableView.frame = tableViewF;
+        
+        CGRect rect = self.inputBarView.frame;
+        rect.origin.y -= _keyboardFrame.size.height;
+        self.inputBarView.frame = rect;
+        [self scrollToBottom];
+    } completion:^(BOOL finished) {
+    }];
+}
+
 
 - (void)dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillShowNotification object:nil];

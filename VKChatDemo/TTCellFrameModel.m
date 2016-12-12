@@ -113,7 +113,7 @@
         //要添加的FrameModel对象
         TTCellFrameModel *cellFrameModel = [[TTCellFrameModel alloc] init];
 
-        //调用本身set方法
+        //调用本身set方法
         EMMessage *message = [emMessage objectAtIndex:i];
         if([message isKindOfClass:[EMMessage class]]) {
             cellFrameModel.message = message;
